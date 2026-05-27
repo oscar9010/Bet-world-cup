@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Rancho Paisa – Mundial 2026</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div id="root">
+  <div id="loading-screen">
+    <div class="spinner"></div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#d4a017;letter-spacing:2px">RANCHO PAISA</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4)">Conectando con Firebase...</div>
+  </div>
+  <div id="login-screen" style="display:none">
+    <div class="login-grass"></div>
+    <div class="login-card">
+      <div style="text-align:center;margin-bottom:4px">
+        <div class="login-badge">MUNDIAL 2026</div>
+        <div class="login-title">RANCHO PAISA</div>
+        <div class="login-sub">Pollas del Mundial</div>
+      </div>
+      <label class="form-label">Usuario</label>
+      <select class="form-input" id="login-user"><option value="">-- Selecciona tu usuario --</option></select>
+      <label class="form-label">Contrasena</label>
+      <input type="password" class="form-input" id="login-pass" placeholder="Tu contrasena" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <button class="btn-login" onclick="doLogin()">Entrar al estadio</button>
+      <div class="login-error" id="login-error">Usuario o contrasena incorrectos</div>
+    </div>
+  </div>
+  <div id="main-screen" style="display:none">
+    <div class="topbar">
+      <span class="topbar-logo">RANCHO PAISA</span>
+      <span style="font-size:10px;color:#d4a017;letter-spacing:2px">MUNDIAL 2026</span>
+      <div class="topbar-user" id="topbar-user"></div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showTab('partidos')">Partidos</button>
+      <button class="nav-tab" onclick="showTab('tabla')">Tabla</button>
+      <button class="nav-tab" id="tab-admin" style="display:none" onclick="showTab('admin')">Admin</button>
+    </div>
+    <div class="main-content">
+      <div id="sec-partidos" class="section active"></div>
+      <div id="sec-tabla" class="section"></div>
+      <div id="sec-admin" class="section"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
