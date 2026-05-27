@@ -114,7 +114,7 @@ async function initDB(){
       luisa:{name:'Luisa',pass:'luisa123',role:'user',color:'#3498db'},
       pipe:{name:'Pipe',pass:'pipe123',role:'user',color:'#2ecc71'},
       tatiana:{name:'Tatiana',pass:'tatiana123',role:'user',color:'#9b59b6'},
-      elprofe:{name:'El Profe',pass:'profe123',role:'user',color:'#f39c12'}
+      elprofe:{name:'El Profe',pass:'profe',role:'user',color:'#f39c12'}
     });
   }
   const ms=await db.ref('matches').once('value');
