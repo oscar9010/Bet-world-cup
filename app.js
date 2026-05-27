@@ -244,7 +244,7 @@ function buildCard(m){
   if(isExp){
     ex+=`<div class="pozo-row"><div><div class="pozo-lbl">POZO</div><div class="pozo-detail">${pb.length} abonados x ${fmt(m.apuesta||5000)}</div></div><div class="pozo-val">${fmt(pz)}</div></div>`;
     if(m.status==='finished'){
-      if(wlist.length){const names=wlist.map(b=>{const u=dbUsers[b.user];return u?u.name:b.user;}).join(', ');ex+=`<div class="winner-row"><span style="font-size:22px">&#127942;</span><div style="flex:1"><div class="winner-name">${names}</div><div class="winner-sub">Acertaron ${m.resultHome}-${m.resultAway}</div></div><div><div class="winner-prize">${fmt(pw)}</div><div class="prize-sub">c/u</div></div></div>`;}
+      if(wlist.length){ex+=wlist.map(b=>{const u=dbUsers[b.user];const un=u?u.name:b.user;return`<div class="winner-row"><span style="font-size:22px">&#127942;</span><div style="flex:1"><div class="winner-name">${un}</div><div class="winner-sub">Acerto ${m.resultHome}-${m.resultAway}</div></div><div><div class="winner-prize">${fmt(pw)}</div><div class="prize-sub">su premio</div></div></div>`;}).join('');}
       else{ex+=`<div class="no-winner-row">Nadie acerto el marcador exacto</div>`;}
     }
     const chips=ab.map(b=>{const u=dbUsers[b.user];const un=u?u.name:b.user;const isW=hasR&&b.home===m.resultHome&&b.away===m.resultAway;return`<div class="b-chip${isW?' bwin':''}">${isW?'&#127942;':''}<span class="bcs">${b.home}-${b.away}</span><span class="bcu">${un}</span><span class="${b.paid?'bcp':'bcx'}">${b.paid?'v':'x'}</span></div>`;}).join('');
@@ -253,7 +253,7 @@ function buildCard(m){
     else if(cb){ex+=`<div class="bet-form"><span style="font-size:14px">${hf}</span><input type="number" min="0" max="20" class="si" id="h${m.id}" value="0" onclick="event.stopPropagation()"/><span class="sd">-</span><input type="number" min="0" max="20" class="si" id="a${m.id}" value="0" onclick="event.stopPropagation()"/><span style="font-size:14px">${af}</span><button class="btn-apostar" onclick="event.stopPropagation();placeBet(${m.id})">Apostar</button></div>`;}
     else if(m.status!=='finished'){ex+=`<div class="closed-msg">Apuestas cerradas (15 min antes del partido)</div>`;}
     if(currentUser.role==='admin'&&m.status!=='finished'){
-      ex+=`<div class="admin-quick"><span style="font-size:10px;color:rgba(255,255,255,.35);width:100%">Admin:</span><input type="number" min="0" max="20" class="ri" id="qrh${m.id}" value="0" onclick="event.stopPropagation()"/><span style="font-family:'Bebas Neue';font-size:16px;color:rgba(255,255,255,.25)">-</span><input type="number" min="0" max="20" class="ri" id="qra${m.id}" value="0" onclick="event.stopPropagation()"/><button class="bs bsuc" onclick="event.stopPropagation();setResult(${m.id})">Finalizar</button><button class="bs bdgr" onclick="event.stopPropagation();closeMatch(${m.id})">Cerrar</button><button class="bs bwarn" onclick="event.stopPropagation();toggleLive(${m.id})">Vivo</button></div>`;
+      ex+=`<div class="admin-quick"><span style="font-size:10px;color:rgba(255,255,255,.35);width:100%">Admin:</span><input type="number" min="0" max="20" class="ri" id="qrh${m.id}" value="0" onclick="event.stopPropagation()"/><span style="font-family:'Bebas Neue';font-size:16px;color:rgba(255,255,255,.25)">-</span><input type="number" min="0" max="20" class="ri" id="qra${m.id}" value="0" onclick="event.stopPropagation()"/><button class="bs bsuc" onclick="event.stopPropagation();setResult(${m.id})">Finalizar</button>${m.status==='closed'?`<button class="bs bsuc" onclick="event.stopPropagation();openMatch(${m.id})">Abrir</button>`:`<button class="bs bdgr" onclick="event.stopPropagation();closeMatch(${m.id})">Cerrar</button>`}<button class="bs bwarn" onclick="event.stopPropagation();toggleLive(${m.id})">Vivo</button></div>`;
     }
   }
   return`<div class="match-card${isExp?' expanded':''}" onclick="toggleMatch(${m.id})" id="mc${m.id}"><div class="mc-top"><span class="mc-num">#${m.id}</span><div class="mc-teams"><span class="mc-flag">${hf}</span><span class="mc-name">${m.homeN}</span>${vsBlock}<span class="mc-name">${m.awayN}</span><span class="mc-flag">${af}</span></div><div class="mc-right"><div class="mc-date">${m.date}<br/>${m.time}</div><span class="mc-status ${cmap[m.status]||'s-open'}">${smap[m.status]||'Abierto'}</span>${ub&&ub.paid?'<span title="Abonado" style="font-size:12px">&#9989;</span>':''}${ub&&!ub.paid?'<span title="Sin abonar" style="font-size:12px">&#9888;</span>':''}</div></div><div class="mc-expand">${ex}</div></div>`;
@@ -264,8 +264,10 @@ function toggleMatch(id){expandedMatch=(expandedMatch===id)?null:id;renderMatche
 async function placeBet(mid){
   const h=parseInt(document.getElementById('h'+mid).value)||0;
   const a=parseInt(document.getElementById('a'+mid).value)||0;
-  await db.ref(`bets/${mid}/${currentUser.id}`).set({user:currentUser.id,home:h,away:a,paid:false});
-  showToast('Apuesta registrada! Recuerda abonar para participar');
+  const existing=dbBets[mid]&&dbBets[mid][currentUser.id];
+  const paid=existing?existing.paid:false;
+  await db.ref(`bets/${mid}/${currentUser.id}`).set({user:currentUser.id,home:h,away:a,paid});
+  showToast(existing?'Marcador actualizado'+(paid?' (sigues abonado)':''):'Apuesta registrada! Recuerda abonar para participar');
 }
 
 function renderLeaderboard(){
@@ -297,7 +299,7 @@ function renderAdmin(){
       const pb=paidBets(m.id);const ab=allBets(m.id);
       const betRows=ab.map(b=>{const u=dbUsers[b.user];return`<div class="adm-bet-row"><span>${u?u.name:b.user}</span><span style="font-weight:800;color:#d4a017">${b.home}-${b.away}</span><button class="tpaid ${b.paid?'paid':'unpaid'}" onclick="togglePaid(${m.id},'${b.user}')">${b.paid?'Abonado':'Sin abonar'}</button></div>`;}).join('')||'<div style="font-size:10px;color:rgba(255,255,255,.3)">Sin apuestas</div>';
       const ctrl=m.status!=='finished'
-        ?`<div class="adm-ctrl"><span class="adm-lbl">Apuesta:</span><input type="number" class="ai" id="amt${m.id}" value="${m.apuesta||5000}" min="0" step="1000"/><button class="bs bwarn" onclick="setApuesta(${m.id})">Guardar</button></div><div class="adm-ctrl"><span class="adm-lbl">Resultado:</span><input type="number" min="0" max="20" class="ri" id="rh${m.id}" value="${m.resultHome>=0?m.resultHome:0}"/><span style="color:rgba(255,255,255,.3);font-family:'Bebas Neue';font-size:16px">-</span><input type="number" min="0" max="20" class="ri" id="ra${m.id}" value="${m.resultAway>=0?m.resultAway:0}"/><button class="bs bsuc" onclick="setResult(${m.id})">Finalizar</button><button class="bs bdgr" onclick="closeMatch(${m.id})">Cerrar</button><button class="bs bwarn" onclick="toggleLive(${m.id})">Vivo</button></div>`
+        ?`<div class="adm-ctrl"><span class="adm-lbl">Apuesta:</span><input type="number" class="ai" id="amt${m.id}" value="${m.apuesta||5000}" min="0" step="1000"/><button class="bs bwarn" onclick="setApuesta(${m.id})">Guardar</button></div><div class="adm-ctrl"><span class="adm-lbl">Resultado:</span><input type="number" min="0" max="20" class="ri" id="rh${m.id}" value="${m.resultHome>=0?m.resultHome:0}"/><span style="color:rgba(255,255,255,.3);font-family:'Bebas Neue';font-size:16px">-</span><input type="number" min="0" max="20" class="ri" id="ra${m.id}" value="${m.resultAway>=0?m.resultAway:0}"/><button class="bs bsuc" onclick="setResult(${m.id})">Finalizar</button>${m.status==='closed'?`<button class="bs bsuc" onclick="openMatch(${m.id})">Abrir apuestas</button>`:`<button class="bs bdgr" onclick="closeMatch(${m.id})">Cerrar</button>`}<button class="bs bwarn" onclick="toggleLive(${m.id})">Vivo</button></div>`
         :`<div style="margin-top:6px;font-size:10px;color:#6ddc96">Finalizado ${m.resultHome}-${m.resultAway} - Pozo: ${fmt(pozo(m.id))} - Premio: ${fmt(prize(m.id))} c/u</div><button class="bs bdgr" style="margin-top:4px" onclick="resetMatch(${m.id})">Reabrir</button>`;
       html+=`<div class="adm-match-card"><div class="adm-match-title"><span>#${m.id} ${flag(m.homeF)}${m.homeN} vs ${m.awayN}${flag(m.awayF)}</span><span style="font-size:9px;color:rgba(255,255,255,.3)">${m.date} ${m.time}</span></div><div class="adm-pozo-info">Apuesta: ${fmt(m.apuesta||5000)} - Pozo: ${fmt(pozo(m.id))} - ${pb.length} abonados</div>${betRows}${ctrl}</div>`;
     });
@@ -330,6 +332,7 @@ async function setResult(mid){
   else showToast('Nadie acerto el marcador exacto');
 }
 async function closeMatch(mid){await db.ref(`matches/${mid}/status`).set('closed');showToast('Apuestas cerradas');}
+async function openMatch(mid){await db.ref(`matches/${mid}/status`).set('open');showToast('Apuestas abiertas');}
 async function toggleLive(mid){const m=dbMatches[mid];const ns=m.status==='live'?'closed':'live';await db.ref(`matches/${mid}/status`).set(ns);showToast(ns==='live'?'EN VIVO activado':'Cerrado');}
 async function resetMatch(mid){if(!confirm('Reabrir?'))return;await db.ref(`matches/${mid}`).update({status:'open',resultHome:-1,resultAway:-1});showToast('Reabierto');}
 
