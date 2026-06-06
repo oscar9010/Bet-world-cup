@@ -5,7 +5,10 @@
       "WebSearch",
       "WebFetch(domain:www.fifa.com)",
       "WebFetch(domain:en.wikipedia.org)",
-      "WebFetch(domain:www.nbcsports.com)"
+      "WebFetch(domain:www.nbcsports.com)",
+      "Bash(rtk ls *)",
+      "PowerShell(New-Item *)",
+      "PowerShell(Copy-Item *)"
     ]
   }
 }

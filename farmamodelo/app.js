@@ -2,6 +2,8 @@ firebase.initializeApp(APP_CONFIG.firebase);
 const db=firebase.database();
 
 const MATCHES_INIT=[
+// Amistosos
+{id:0,phase:"Amistosos",home:{n:"Jordania",f:"JO"},away:{n:"Colombia",f:"CO"},date:"2026-06-07",time:"18:00",venue:"Por definir"},
 // Grupo A
 {id:1,phase:"Grupo A",home:{n:"Mexico",f:"MX"},away:{n:"Sudafrica",f:"ZA"},date:"2026-06-11",time:"14:00",venue:"Estadio Azteca, CDMX"},
 {id:2,phase:"Grupo A",home:{n:"Corea del Sur",f:"KR"},away:{n:"Chequia",f:"CZ"},date:"2026-06-11",time:"21:00",venue:"Estadio Akron, GDL"},
@@ -147,6 +149,11 @@ async function initDB(){
     const obj={};
     MATCHES_INIT.forEach(m=>{obj[m.id]={id:m.id,phase:m.phase,homeN:m.home.n,homeF:m.home.f,awayN:m.away.n,awayF:m.away.f,date:m.date,time:m.time,venue:m.venue,status:'open',apuesta:5000,resultHome:-1,resultAway:-1};});
     await db.ref('matches').set(obj);
+  } else {
+    const existing=ms.val()||{};
+    const newMatches={};
+    MATCHES_INIT.forEach(m=>{if(existing[m.id]===undefined){newMatches[m.id]={id:m.id,phase:m.phase,homeN:m.home.n,homeF:m.home.f,awayN:m.away.n,awayF:m.away.f,date:m.date,time:m.time,venue:m.venue,status:'open',apuesta:5000,resultHome:-1,resultAway:-1};}});
+    if(Object.keys(newMatches).length>0)await db.ref('matches').update(newMatches);
   }
 }
 
@@ -276,7 +283,7 @@ function buildCard(m){
     }
     const chips=ab.map(b=>{const u=dbUsers[b.user];const un=u?u.name:b.user;const isW=hasR&&b.home===m.resultHome&&b.away===m.resultAway;return`<div class="b-chip${isW?' bwin':''}">${isW?'&#127942;':''}<span class="bcs">${b.home}-${b.away}</span><span class="bcu">${un}</span><span class="${b.paid?'bcp':'bcx'}">${b.paid?'v':'x'}</span></div>`;}).join('');
     ex+=`<div style="margin-bottom:8px"><div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:5px">Pronosticos (${ab.length}) - <span style="color:#6ddc96">${pb.length} abonados</span></div><div class="bets-grid">${chips||'<span style="font-size:11px;color:rgba(255,255,255,.3)">Sin pronosticos</span>'}</div></div>`;
-    if(ub){const isW=hasR&&ub.home===m.resultHome&&ub.away===m.resultAway;ex+=`<div class="my-bet-row"><span style="color:rgba(255,255,255,.4)">Tu apuesta:</span><span style="font-weight:800;color:#d4a017">${ub.home}-${ub.away}</span><span class="${ub.paid?'bcp':'bcx'}">${ub.paid?'Abonado':'Sin abonar'}</span>${!ub.paid?'<span style="font-size:10px;color:#f0918a">- abona para participar</span>':''}${isW?`<span style="font-size:10px;color:#d4a017;font-weight:800">Ganaste ${fmt(pw)}!</span>`:''}</div>`;if(cb){ex+=`<div class="bet-form"><span style="font-size:14px">${hf}</span><input type="number" min="0" max="20" class="si" id="h${m.id}" value="${ub.home}" onclick="event.stopPropagation()"/><span class="sd">-</span><input type="number" min="0" max="20" class="si" id="a${m.id}" value="${ub.away}" onclick="event.stopPropagation()"/><span style="font-size:14px">${af}</span><button class="btn-apostar" onclick="event.stopPropagation();placeBet(${m.id})">Actualizar</button></div>`;}}
+    if(ub){const isW=hasR&&ub.home===m.resultHome&&ub.away===m.resultAway;ex+=`<div class="my-bet-row"><span style="color:rgba(255,255,255,.4)">Tu apuesta:</span><span style="font-weight:800;color:#d4a017">${ub.home}-${ub.away}</span><span class="${ub.paid?'bcp':'bcx'}">${ub.paid?'Abonado':'Sin abonar'}</span>${!ub.paid?'<span style="font-size:10px;color:#f0918a">- abona para participar</span>':''}${isW?`<span style="font-size:10px;color:#d4a017;font-weight:800">Ganaste ${fmt(pw)}!</span>`:''}</div>`;if(cb){ex+=`<div class="bet-form"><span style="font-size:14px">${hf}</span><input type="number" min="0" max="20" class="si" id="h${m.id}" value="${ub.home}" onclick="event.stopPropagation()"/><span class="sd">-</span><input type="number" min="0" max="20" class="si" id="a${m.id}" value="${ub.away}" onclick="event.stopPropagation()"/><span style="font-size:14px">${af}</span><button class="btn-apostar" onclick="event.stopPropagation();placeBet(${m.id})">Actualizar</button><button class="btn-del" onclick="event.stopPropagation();deleteBet(${m.id})">Eliminar</button></div>`;}}
     else if(cb){ex+=`<div class="bet-form"><span style="font-size:14px">${hf}</span><input type="number" min="0" max="20" class="si" id="h${m.id}" value="0" onclick="event.stopPropagation()"/><span class="sd">-</span><input type="number" min="0" max="20" class="si" id="a${m.id}" value="0" onclick="event.stopPropagation()"/><span style="font-size:14px">${af}</span><button class="btn-apostar" onclick="event.stopPropagation();placeBet(${m.id})">Apostar</button></div>`;}
     else if(m.status!=='finished'){ex+=`<div class="closed-msg">Apuestas cerradas (15 min antes del partido)</div>`;}
     if(currentUser.role==='admin'&&m.status!=='finished'){
@@ -295,6 +302,12 @@ async function placeBet(mid){
   const paid=existing?existing.paid:false;
   await db.ref(`bets/${mid}/${currentUser.id}`).set({user:currentUser.id,home:h,away:a,paid});
   showToast(existing?'Marcador actualizado'+(paid?' (sigues abonado)':''):'Apuesta registrada! Recuerda abonar para participar');
+}
+
+async function deleteBet(mid){
+  if(!confirm('Eliminar tu apuesta?'))return;
+  await db.ref(`bets/${mid}/${currentUser.id}`).remove();
+  showToast('Apuesta eliminada');
 }
 
 function renderLeaderboard(){
