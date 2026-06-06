@@ -130,7 +130,7 @@ const MATCHES_INIT=[
 
 let currentUser=null,expandedMatch=null,filterPhase='all',searchQ='',dbUsers={},dbMatches={},dbBets={};
 
-const FLAG_SPECIAL={"GB":"gb-eng","SCT":"gb-sct"};
+const FLAG_IMGS={"GB":"gb-eng","SCT":"gb-sct"};
 
 async function initDB(){
   const us=await db.ref('users').once('value');
@@ -221,7 +221,13 @@ function showTab(tab){
 }
 
 function fmt(n){return '$'+Number(n).toLocaleString('es-CO');}
-function flag(code){if(code==='--')return '<span style="opacity:.3;font-size:14px">?</span>';const fc=FLAG_SPECIAL[code]||code.toLowerCase();return`<img src="https://flagcdn.com/w20/${fc}.png" style="height:15px;border-radius:2px;vertical-align:middle;display:inline-block"/>`; }
+function flag(code){
+  if(code==='--')return '<span style="opacity:.3;font-size:14px">?</span>';
+  if(FLAG_IMGS[code])return`<img src="https://flagcdn.com/w20/${FLAG_IMGS[code]}.png" style="height:15px;border-radius:2px;vertical-align:middle;display:inline-block"/>`;
+  const c=code.toUpperCase();
+  const emoji=String.fromCodePoint(0x1F1E6+c.charCodeAt(0)-65)+String.fromCodePoint(0x1F1E6+c.charCodeAt(1)-65);
+  return`<span style="font-size:16px;line-height:1;vertical-align:middle">${emoji}</span>`;
+}
 function paidBets(mid){return dbBets[mid]?Object.values(dbBets[mid]).filter(b=>b.paid):[];}
 function allBets(mid){return dbBets[mid]?Object.values(dbBets[mid]):[];}
 function winners(mid){const m=dbMatches[mid];if(!m||m.resultHome<0)return[];return paidBets(mid).filter(b=>b.home===m.resultHome&&b.away===m.resultAway);}
